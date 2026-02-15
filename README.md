@@ -85,19 +85,6 @@ Os testes realizados nesse experimento consiste em ciclo de testes que contem os
 
 
 
-## 🎓 Citação
-
-Se você utilizar este código em sua pesquisa, por favor cite o artigo correspondente:
-
-```bibtex
-@inproceedings{silva2026arquitetura,
-  title={Arquitetura para Integração Contínua de Chaves Híbridas Quanticamente Seguras},
-  author={Silva, Esdras V. and Abreu, Diego and Abelém, Antônio},
-  booktitle={Anais do XLIV Simpósio Brasileiro de Redes de Computadores e Sistemas Distribuídos (SBRC 2026)},
-  year={2026},
-  organization={SBC}
-}
-```
 
 ## 🤝 Agradecimentos
 
