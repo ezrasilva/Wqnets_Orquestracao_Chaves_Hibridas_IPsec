@@ -1,38 +1,110 @@
-# SDKM-PoC: Gestão de Chaves Quânticas Definida por Software
+# SDKM-PoC: Arquitetura para Integração Contínua de Chaves Híbridas Quanticamente Seguras
 
-## Descrição
-Este repositório contém uma Prova de Conceito (PoC) para um sistema de gestão de chaves híbrido que integra Criptografia Pós-Quântica (PQC) e Distribuição de Chaves Quânticas (QKD) para proteger comunicações via VPN IPsec. A arquitetura utiliza uma abordagem de Redes Definidas por Software (SDN) para orquestrar a segurança de múltiplos nós de forma dinâmica.
+Este repositório contém a implementação de referência e os artefatos experimentais apresentados no artigo submetido ao **SBRC 2026**. A Prova de Conceito (PoC) demonstra uma arquitetura de **Software-Defined Key Management (SDKM)** projetada para mitigar a ameaça **Harvest Now, Decrypt Later (HN-DL)** por meio da orquestração contínua de chaves híbridas em redes clássicas.
 
-## Cenários de Teste
-O projeto está estruturado para comparar dois cenários distintos através de uma infraestrutura de testes automatizada:
+ 
 
-### 1. Cenário Baseline (Sem SDKM)
-Representa a operação padrão de uma VPN IPsec sem a intervenção da camada de gestão quântica.
-* **Infraestrutura**: Utiliza contentores com o prefixo `base_` (ex: `base_alice`) definidos num ambiente isolado.
-* **Configuração**: Os nós utilizam imagens padrão do StrongSwan com configurações de túnel estáticas carregadas via `swanctl.conf`.
-* **Execução**: Ativado no controlador de automação através da flag `--baseline`.
+## 📑 Resumo do Projeto
 
-### 2. Cenário com SDKM (Modo SDN/Quantum)
-Introduz a orquestração dinâmica de chaves híbridas que combinam segurança pós-quântica e quântica.
-* **Controlador SDN**: O orquestrador gera chaves híbridas combinando o algoritmo ML-KEM-768 com chaves QKD obtidas via API compatível com o padrão ETSI GS QKD 014.
-* **Injeção Dinâmica**: Os agentes VPN nos nós recebem estas chaves através de uma API segura e injetam-nas no daemon Charon em tempo real usando o protocolo VICI.
-* **Segurança do Plano de Controlo**: Todas as mensagens de gestão entre o controlador e os agentes são assinadas com ML-DSA-65, protegidas por encriptação de envelope e validadas contra ataques de replay.
+A solução propõe o desacoplamento da lógica de segurança do plano de dados por meio de um controlador centralizado. A arquitetura viabiliza a **Forward Secrecy Quântica** através do mecanismo de **Hot Key Rotation** (rotação de chaves em tempo de execução), permitindo a substituição do material criptográfico em túneis IPsec ativos sem a necessidade de renegociação de sessão (*handshake*) ou interrupção do tráfego.
 
-## Metodologia de Comparação
-Para garantir resultados precisos, ambos os cenários são submetidos às mesmas condições experimentais:
-* **Emulação de Rede**: Aplicação de perfis de rede WAN (como `wan-fiber`) que simulam latência, jitter e perda de pacotes via `tc/netem`.
-* **Bateria de Testes**: Execução automatizada de medições de débito TCP (throughput), estabilidade de vídeo (UDP jitter) e transferências de ficheiros de grande escala (ex: 500MB).
-* **Métricas de Recursos**: Monitorização contínua do consumo de CPU e memória de todos os contentores para avaliar o impacto computacional da solução SDKM.
 
-## Arquitetura Técnica
-* **Nós de Rede**: Contentores baseados em Ubuntu 22.04 equipados com StrongSwan e agentes API Flask.
-* **Algoritmo de Mixagem**: Utilização do protocolo HKDF-SHA256 para derivar uma chave final de 256 bits a partir de material PQC e QKD.
-* **Componentes Core**:
-    * `liboqs`: Biblioteca para algoritmos criptográficos pós-quânticos.
-    * `strongSwan`: Implementação de VPN IPsec com suporte a VICI.
-    * `iperf3`: Ferramenta principal para geração de tráfego e medição de performance.
 
-## Fluxo de Operação
-1. **Inicialização**: O script `entrypoint.sh` configura o ambiente de rede e inicia os processos críticos (Charon e Agente VPN).
-2. **Ciclo SDN**: O controlador SDN executa ciclos periódicos onde solicita chaves QKD, gera segredos PQC e coordena a atualização dos túneis nos nós.
-3. **Execução de Experiências**: O `automation_controller.py` gere o ciclo de vida dos testes, aplicando condições de rede e arquivando os resultados em formatos CSV e JSON para análise.
+## 🏗️ Arquitetura do Sistema
+
+O sistema é estruturado em três domínios principais:
+
+- **SDKM Core (Orquestrador)**:  
+  Plano de controle lógico responsável pela geração de entropia PQC, consumo de chaves QKD e orquestração do ciclo de vida das chaves.
+
+- **Quantum Plane Forwarding**:  
+  Provê entropia física via nós QKD (emulados pela ferramenta *QuKayDee*), seguindo o padrão **ETSI GS QKD 014**.
+
+- **Hosts (Agentes de Segurança)**:  
+  Executam a injeção transparente de chaves nos serviços de rede (*strongSwan*) utilizando a interface **VICI**.
+
+
+
+## 🛠️ Especificações Técnicas
+
+- **Criptografia Pós-Quântica (PQC)**:  
+  Utilização da biblioteca **libOQS** com os algoritmos **ML-KEM-768** (confidencialidade) e **ML-DSA-65** (autenticidade) no plano de controle.
+
+- **Hibridização de Chaves**:  
+  Processo de mixagem baseado em **XOR**, seguido de derivação via **HKDF-SHA256**, garantindo segurança por composição (PQC + QKD).
+
+- **VPN IPsec**:  
+  Utilização do daemon **strongSwan** no kernel Linux para o plano de dados.
+
+- **Ambiente**:  
+  Virtualização baseada em **Docker**, com controle de condições de rede (latência WAN de 20 ms a 150 ms) via **tc/netem**.
+
+
+
+## 📊 Cenários Experimentais
+
+O repositório está organizado para reproduzir os resultados das Seções 5 e 6 do artigo:
+
+- **Cenário Baseline**:  
+  Operação de uma VPN IPsec clássica para estabelecer métricas de comparação.
+
+- **Cenário SDKM (Híbrido)**:  
+  Avaliação da latência de hibridização e injeção, além do impacto em vazão TCP e *jitter* UDP sob rotação proativa.
+
+- **Escalabilidade Multi-nó**:  
+  Testes com múltiplos túneis simultâneos (Alice–Bob e Carol–Dave) para validar o paralelismo do Orquestrador.
+
+
+## 📂 Estrutura do Repositório
+
+- `/scripts`  
+  Código-fonte do orquestrador, agentes e lógica de hibridização.
+
+- `/analise_final`  
+  Gráficos de performance (vazão, *jitter*, perda) gerados durante os experimentos.
+
+- `/metrics_sdn_real`  
+  Dados brutos em JSON/CSV coletados pelo controlador de automação.
+
+- `automation_controller.py`  
+  Orquestrador dos testes automatizados.
+
+
+
+## 🚀 Como Executar
+Os testes realizados nesse experimento consiste em ciclo de testes que contem os seguintes:
+
+- ### Cenario Baseline:
+    Para rodar o teste baseline devemos rodar o script `baseline_automation.py` na pasta `\baseline_test`:
+
+    ```python
+        python3 baseline_automation.py --iteration 60 --duration 300 --interval 60
+    ``` 
+- ### Cenario SDKM:
+    Para rodar o teste SDKM devemos rodar o script `automation_controller.py` na pasta `\scripts`:
+
+    ```python
+        python3 automation_controller.py --iteration 60 --duration 300 --interval 60
+    ``` 
+
+**Nota**: Para reproduzir os resultados de latência de orquestração detalhados na Figura 2 do artigo, certifique-se de que o emulador **QuKayDee** está acessível via API REST. O tutorial de como usar o simulador está no site dele. [Tutorial](https://qukaydee.com/pages/getting_started)
+
+
+
+## 🎓 Citação
+
+Se você utilizar este código em sua pesquisa, por favor cite o artigo correspondente:
+
+```bibtex
+@inproceedings{silva2026arquitetura,
+  title={Arquitetura para Integração Contínua de Chaves Híbridas Quanticamente Seguras},
+  author={Silva, Esdras V. and Abreu, Diego and Abelém, Antônio},
+  booktitle={Anais do XLIV Simpósio Brasileiro de Redes de Computadores e Sistemas Distribuídos (SBRC 2026)},
+  year={2026},
+  organization={SBC}
+}
+```
+
+## 🤝 Agradecimentos
+
+Este trabalho foi realizado com o apoio da UFPA (Propesp), CNPq e FAPESP.
