@@ -60,12 +60,6 @@ O repositório está organizado para reproduzir os resultados das Seções 5 e 6
 - `/scripts`  
   Código-fonte do orquestrador, agentes e lógica de hibridização.
 
-- `/analise_final`  
-  Gráficos de performance (vazão, *jitter*, perda) gerados durante os experimentos.
-
-- `/metrics_sdn_real`  
-  Dados brutos em JSON/CSV coletados pelo controlador de automação.
-
 - `automation_controller.py`  
   Orquestrador dos testes automatizados.
 
