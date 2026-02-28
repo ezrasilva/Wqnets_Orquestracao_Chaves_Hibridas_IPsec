@@ -22,7 +22,7 @@ except ImportError:
     print("ERRO CRITICO: liboqs nao encontrado. A autenticacao PQC vai falhar.")
 
 # Certifique-se de que estes arquivos existem no diretório /scripts
-from hybrid_key_gen import mix_keys, hkdf_extract, hkdf_expand
+from hybrid_key_gen import mix_keys, hkdf_pqc_only, hkdf_extract, hkdf_expand, encrypt_payload_aead, derive_aead_key
 from qukaydee_client import QuKayDeeClient
 
 # --- CONFIGURAÇÕES ---
@@ -36,8 +36,9 @@ AUTH_ALGO = "ML-DSA-65"
 PRIV_KEY_PATH = "/scripts/orchestrator_auth.key"
 HTTP_TIMEOUT = 10
 
-PQC_ALGO = "ML-KEM-768"  # Algoritmo PQ para chave híbrida
+PQC_ALGO = os.environ.get("PQC_ALGO", "ML-KEM-768")  # Algoritmo PQ para chave híbrida (configurável)
 KEM_ALGO = "ML-KEM-768"  # Algoritmo para criptografia de envelope
+
 
 MAX_MESSAGE_AGE_SECONDS = 30
 
@@ -63,13 +64,13 @@ CONNECTIONS = {
         'child_name': 'net-traffic',
         'initiator': 'alice'
     },
-    'carol-dave': {
-        'nodes': ('carol', 'dave'),
-        'urls': (AGENT_CAROL_URL, AGENT_DAVE_URL),
-        'ike_name': 'carol-to-dave',
-        'child_name': 'net-traffic',
-        'initiator': 'carol'
-    }
+    # 'carol-dave': {
+    #     'nodes': ('carol', 'dave'),
+    #     'urls': (AGENT_CAROL_URL, AGENT_DAVE_URL),
+    #     'ike_name': 'carol-to-dave',
+    #     'child_name': 'net-traffic',
+    #     'initiator': 'carol'
+    # }
 }
 
 # --- CONFIGURAÇÕES DE MÉTRICAS ---
@@ -131,32 +132,42 @@ except Exception as e:
 
 def send_encrypted_signed_request(url, endpoint, payload_dict, agent_kem_public_key):
     """
-    Envia JSON criptografado com ML-KEM e assinado com ML-DSA-65
-    CORRIGIDO: Verifica HAS_OQS antes de operações criptográficas.
+    Envia JSON criptografado com ML-KEM + ChaCha20-Poly1305 AEAD e assinado com ML-DSA-65.
+    
+    FLUXO:
+    1. Gera shared_secret via ML-KEM
+    2. Deriva chave AEAD via HKDF
+    3. Criptografa payload com ChaCha20-Poly1305 (AEAD com AAD contendo timestamp/nonce)
+    4. Assina ciphertext com ML-DSA-65
+    5. Envia com nonce em header
     """
     try:
         payload_dict['_timestamp'] = int(time.time())
         payload_dict['_nonce'] = base64.b64encode(os.urandom(16)).decode('utf-8')
         
-        payload_json = json.dumps(payload_dict)
-        payload_bytes = payload_json.encode('utf-8')
-
-        encrypted_payload = payload_bytes
         kem_ciphertext = None
+        nonce_b64 = None
+        encrypted_payload = json.dumps(payload_dict).encode('utf-8')
         
-        # Criptografia KEM (Apenas se liboqs estiver disponível)
+        # Criptografia KEM + AEAD (Apenas se liboqs estiver disponível)
         if agent_kem_public_key and HAS_OQS:
             try:
                 with oqs.KeyEncapsulation(KEM_ALGO) as kem_client:
                     kem_ciphertext, shared_secret = kem_client.encap_secret(agent_kem_public_key)
-                    
-                    from hashlib import sha256
-                    key = sha256(shared_secret).digest()
-                    # Garante que a chave repetida cubra todo o payload
-                    keystream = (key * ((len(payload_bytes) // 32) + 1))[:len(payload_bytes)]
-                    encrypted_payload = bytes(a ^ b for a, b in zip(payload_bytes, keystream))
+                
+                # AEAD: Derivar chave a partir do shared_secret
+                aead_key = derive_aead_key(shared_secret, "SDQC-controller-context")
+                
+                # Criptografar payload com ChaCha20-Poly1305
+                aead_result = encrypt_payload_aead(payload_dict, aead_key)
+                encrypted_payload = aead_result['ciphertext']  # Inclui tag
+                nonce_bytes = aead_result['nonce']
+                nonce_b64 = base64.b64encode(nonce_bytes).decode('utf-8')
+                
+                logger.info(f"  ✓ [AEAD] Payload criptografado com ChaCha20-Poly1305 + KEM-derived key")
+                
             except Exception as e:
-                logger.warning(f"Falha na criptografia KEM: {e}. Enviando em texto claro.")
+                logger.warning(f"Falha na criptografia KEM/AEAD: {e}. Enviando em texto claro.")
         
         # Assinatura Digital (CORREÇÃO: Checagem HAS_OQS para evitar crash)
         signature = b""
@@ -179,6 +190,9 @@ def send_encrypted_signed_request(url, endpoint, payload_dict, agent_kem_public_
         
         if kem_ciphertext:
             headers['X-KEM-Ciphertext'] = base64.b64encode(kem_ciphertext).decode('utf-8')
+        
+        if nonce_b64:
+            headers['X-AEAD-Nonce'] = nonce_b64
         
         resp = requests.post(
             f"{url}/{endpoint}",
@@ -322,13 +336,15 @@ def generate_hybrid_key(cycle, conn_name, node1, node2, kme_urls, certs, node_to
         
         start_mix = time.time()
         if qkd_key:
+            # MODO HÍBRIDO: combina PQC + QKD
             final_key = mix_keys(pqc_secret, qkd_key)
             mix_status = "hybrid_qkd_pqc"
-            logger.info(f"  ✓ Chave Final: PQC({PQC_ALGO}) + QKD + HKDF-SHA256")
+            logger.info(f"  ✓ [MODO HÍBRIDO] Chave Final: PQC({PQC_ALGO}) + QKD + HKDF-SHA256")
         else:
-            final_key = mix_keys(pqc_secret, b'\x00' * 32)
-            mix_status = "fallback_pqc_only"
-            logger.warning(f"  ✓ Chave Final: PQC({PQC_ALGO}) PURO (QKD indisponível)")
+            # MODO PQC-ONLY: apenas PQC, sem material artificial
+            final_key = hkdf_pqc_only(pqc_secret)
+            mix_status = "pqc_only"
+            logger.warning(f"  ✓ [MODO PQC-ONLY] Chave Final: PQC({PQC_ALGO}) PURO (QKD indisponível)")
         
         mix_time = (time.time() - start_mix) * 1000
         log_metric(cycle, conn_name, "HKDF_MIX", mix_time, 200, mix_status)

@@ -34,36 +34,36 @@ services:
     entrypoint: ["/entrypoint.sh"]
 
   # --- VPN CAROL ---
-  carol:
-    build: .
-    container_name: carol
-    cap_add: [NET_ADMIN, SYS_MODULE]
-    environment:
-      - TZ=America/Sao_Paulo  # Correção de Timestamp
-    networks:
-      rede_transporte:
-        ipv4_address: 192.168.100.12
-    volumes:
-      - ./carol/swanctl.conf:/etc/swanctl/swanctl.conf
-      - ./scripts:/scripts
-      - /etc/localtime:/etc/localtime:ro  # Sincronização de Relógio com Host
-    entrypoint: ["/entrypoint.sh"]
+  # carol:
+  #   build: .
+  #   container_name: carol
+  #   cap_add: [NET_ADMIN, SYS_MODULE]
+  #   environment:
+  #     - TZ=America/Sao_Paulo  # Correção de Timestamp
+  #   networks:
+  #     rede_transporte:
+  #       ipv4_address: 192.168.100.12
+  #   volumes:
+  #     - ./carol/swanctl.conf:/etc/swanctl/swanctl.conf
+  #     - ./scripts:/scripts
+  #     - /etc/localtime:/etc/localtime:ro  # Sincronização de Relógio com Host
+  #   entrypoint: ["/entrypoint.sh"]
 
-  # --- VPN DAVE ---
-  dave:
-    build: .
-    container_name: dave
-    cap_add: [NET_ADMIN, SYS_MODULE]
-    environment:
-      - TZ=America/Sao_Paulo  # Correção de Timestamp
-    networks:
-      rede_transporte:
-        ipv4_address: 192.168.100.13
-    volumes:
-      - ./dave/swanctl.conf:/etc/swanctl/swanctl.conf
-      - ./scripts:/scripts
-      - /etc/localtime:/etc/localtime:ro  # Sincronização de Relógio com Host
-    entrypoint: ["/entrypoint.sh"]
+  # # --- VPN DAVE ---
+  # dave:
+  #   build: .
+  #   container_name: dave
+  #   cap_add: [NET_ADMIN, SYS_MODULE]
+  #   environment:
+  #     - TZ=America/Sao_Paulo  # Correção de Timestamp
+  #   networks:
+  #     rede_transporte:
+  #       ipv4_address: 192.168.100.13
+  #   volumes:
+  #     - ./dave/swanctl.conf:/etc/swanctl/swanctl.conf
+  #     - ./scripts:/scripts
+  #     - /etc/localtime:/etc/localtime:ro  # Sincronização de Relógio com Host
+  #   entrypoint: ["/entrypoint.sh"]
 
   # --- ORQUESTRADOR ---
   orchestrator:

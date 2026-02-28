@@ -11,11 +11,13 @@ import json
 import sys
 from hashlib import sha256
 from collections import deque
+from hybrid_key_gen import decrypt_payload_aead, derive_aead_key
 
 app = Flask(__name__)
 VICI_SOCKET = "/var/run/charon.vici"
 AUTH_ALGO = "ML-DSA-65"
 KEM_ALGO = "ML-KEM-768"
+PQC_ALGO = os.environ.get("PQC_ALGO", "ML-KEM-768")  # Algoritmo PQ para chave híbrida (configurável)
 PUB_KEY_PATH = "/scripts/orchestrator_auth.pub"
 TLS_CERT_PATH = "/scripts/certs/agent_cert.pem"
 TLS_KEY_PATH = "/scripts/certs/agent_key.pem"
@@ -57,8 +59,13 @@ def verify_signature(payload_bytes, signature_b64):
         logger.error(f"Erro na verificacao da assinatura: {e}")
         return False
 
-def decrypt_payload(encrypted_bytes, kem_ciphertext_b64):
-    """Descriptografa payload usando ML-KEM"""
+def decrypt_payload(encrypted_bytes, kem_ciphertext_b64, aead_nonce_b64=None):
+    """
+    Descriptografa payload usando ML-KEM + ChaCha20-Poly1305 AEAD.
+    
+    Se aead_nonce_b64 estiver presente, usa AEAD (novo).
+    Caso contrário, tenta XOR (fallback para compatibilidade retroativa).
+    """
     try:
         if not KEM_SECRET_KEY:
             logger.warning("KEM não disponível. Assumindo payload não criptografado.")
@@ -69,9 +76,26 @@ def decrypt_payload(encrypted_bytes, kem_ciphertext_b64):
         with oqs.KeyEncapsulation(KEM_ALGO, secret_key=KEM_SECRET_KEY) as kem_server:
             shared_secret = kem_server.decap_secret(kem_ciphertext)
             
+            # Novo: AEAD com ChaCha20-Poly1305
+            if aead_nonce_b64:
+                try:
+                    aead_key = derive_aead_key(shared_secret, "SDQC-agent-context")
+                    nonce = base64.b64decode(aead_nonce_b64)
+                    
+                    # AAD será fornecido durante a descriptografia (dentro do middleware)
+                    # Por enquanto, apenas retornamos os bytes criptografados
+                    # e o middleware cuida da AAD
+                    return ("aead", encrypted_bytes, nonce, aead_key)
+                    
+                except Exception as e:
+                    logger.warning(f"Falha na descriptografia AEAD, tentando XOR legado: {e}")
+                    pass  # Fall through para XOR
+            
+            # Legacy: XOR (compatibilidade retroativa)
             key = sha256(shared_secret).digest()
             decrypted = bytes(a ^ b for a, b in zip(encrypted_bytes, (key * ((len(encrypted_bytes) // 32) + 1))[:len(encrypted_bytes)]))
-            return decrypted
+            return ("xor", decrypted, None, None)
+            
     except Exception as e:
         logger.error(f"Erro na descriptografia KEM: {e}")
         return None
@@ -141,15 +165,38 @@ def authenticate_and_decrypt():
         payload_bytes = encrypted_payload
         if request.headers.get('X-KEM-Encrypted') == 'true':
             kem_ct_header = request.headers.get('X-KEM-Ciphertext')
+            aead_nonce_header = request.headers.get('X-AEAD-Nonce')
+            
             if not kem_ct_header:
                 logger.error("KEM ciphertext header ausente mas X-KEM-Encrypted=true")
                 return jsonify({"error": "KEM ciphertext ausente"}), 400
             
             try:
-                payload_bytes = decrypt_payload(encrypted_payload, kem_ct_header)
-                if payload_bytes is None:
+                decrypt_result = decrypt_payload(encrypted_payload, kem_ct_header, aead_nonce_header)
+                
+                if decrypt_result is None:
                     logger.error("Descriptografia retornou None")
                     return jsonify({"error": "Falha na descriptografia"}), 400
+                
+                # Verificar qual modo foi usado
+                if isinstance(decrypt_result, tuple) and decrypt_result[0] == "aead":
+                    _, ciphertext, nonce, aead_key = decrypt_result
+                    
+                    try:
+                        # Descriptografar com AAD
+                        payload_dict = decrypt_payload_aead(ciphertext, nonce, aead_key)
+                        payload_bytes = json.dumps(payload_dict).encode('utf-8')
+                        
+                        logger.info(f"  ✓ [AEAD] Payload descriptografado e verificado com ChaCha20-Poly1305")
+                        
+                    except Exception as e:
+                        logger.error(f"ERRO na descriptografia AEAD: {e}")
+                        return jsonify({"error": f"Falha na verificação AEAD: {str(e)}"}), 400
+                else:
+                    # Legacy XOR mode
+                    _, payload_bytes, _, _ = decrypt_result
+                    logger.info(f"  ✓ [XOR Legacy] Payload descriptografado (modo compatibilidade)")
+                    
             except Exception as e:
                 logger.error(f"ERRO durante descriptografia KEM: {e}")
                 return jsonify({"error": f"Erro descriptografia: {str(e)}"}), 400

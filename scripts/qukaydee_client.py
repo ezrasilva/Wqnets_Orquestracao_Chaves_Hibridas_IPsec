@@ -13,9 +13,9 @@ class QuKayDeeClient:
         self.base_url = kme_url.rstrip('/')
         self.cert = (cert_path, key_path)
        
-        self.verify = False
+        self.verify = ca_cert_path if ca_cert_path else False
         print(f"   [QuKayDee] Cliente iniciado para: {self.base_url}")
-        print(f"   [AVISO] Verificação SSL DESABILITADA (apenas para testes)")
+        print(f"   [AVISO] Verificação SSL {'HABILITADA' if self.verify else 'DESABILITADA'}")
 
     def get_enc_key(self, peer_sae_id, number=1):
         """
