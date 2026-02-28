@@ -79,7 +79,7 @@ services:
     volumes:
       - ./scripts:/scripts
       - /etc/localtime:/etc/localtime:ro  # Sincronização de Relógio com Host
-    entrypoint: ["sh", "-c", "python3 /scripts/generate_auth_keys.py && python3 -u /scripts/sdn_controller_multi_node.py"]
+    entrypoint: ["sh", "-c", "python3 /scripts/generate_tls_certs.py && python3 /scripts/generate_auth_keys.py && python3 -u /scripts/sdn_controller_multi_node.py"]
 
 networks:
   vpc_qkd:

@@ -12,6 +12,7 @@ import csv
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+
 # Tenta importar liboqs de forma segura
 try:
     import oqs
@@ -25,6 +26,7 @@ from hybrid_key_gen import mix_keys, hkdf_extract, hkdf_expand
 from qukaydee_client import QuKayDeeClient
 
 # --- CONFIGURAÇÕES ---
+ROTATION_INTERVAL = int(os.environ.get("ROTATION_INTERVAL", 10))
 AGENT_ALICE_URL = "https://192.168.100.10:5000"
 AGENT_BOB_URL   = "https://192.168.100.11:5000"
 AGENT_CAROL_URL = "https://192.168.100.12:5000"
@@ -438,8 +440,8 @@ def main():
             
             time.sleep(1)
         
-        logger.info(f"Ciclo {cycle} completo. Aguardando...")
-        time.sleep(10)
+        logger.info(f"Ciclo {cycle} completo. Aguardando {ROTATION_INTERVAL}s...")
+        time.sleep(ROTATION_INTERVAL)
 
 if __name__ == "__main__":
     main()

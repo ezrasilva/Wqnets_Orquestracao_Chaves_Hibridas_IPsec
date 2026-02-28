@@ -12,3 +12,4 @@ scripts/__pycache__/hybrid_key_gen.cpython-310.pyc
 /venv
 **/__pycache__/
 *.pdf
+/teste_tradeoff

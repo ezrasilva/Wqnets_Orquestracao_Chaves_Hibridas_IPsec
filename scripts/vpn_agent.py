@@ -114,47 +114,65 @@ def authenticate_and_decrypt():
     if request.path in ['/health', '/public-key']:
         return
     
+    signature_header = request.headers.get('X-PQC-Signature')
+    if not signature_header:
+        logger.error(f"Request sem assinatura PQC: {request.path}")
+        return jsonify({"error": "Autenticacao PQC obrigatoria"}), 401
+    
     try:
-        signature_header = request.headers.get('X-PQC-Signature')
-        if not signature_header:
-            return jsonify({"error": "Autenticacao PQC obrigatoria"}), 401
-        
         # 1. Obter payload (pode estar criptografado)
         encrypted_payload = request.get_data()
         
+        if not encrypted_payload:
+            logger.error(f"Payload vazio em {request.path}")
+            return jsonify({"error": "Payload vazio"}), 400
+        
         # 2. Verificar assinatura no payload criptografado
-        if not verify_signature(encrypted_payload, signature_header):
-            logger.warning(f"Tentativa de comando NAO AUTORIZADO de {request.remote_addr}")
-            return jsonify({"error": "Assinatura Digital Invalida"}), 403
+        try:
+            is_valid = verify_signature(encrypted_payload, signature_header)
+            if not is_valid:
+                logger.warning(f"Tentativa de comando NAO AUTORIZADO de {request.remote_addr} - Assinatura invalida")
+                return jsonify({"error": "Assinatura Digital Invalida"}), 403
+        except Exception as e:
+            logger.error(f"ERRO ao verificar assinatura: {e}")
+            return jsonify({"error": f"Erro na verificacao: {str(e)}"}), 403
         
         # 3. Descriptografar se necessário
         payload_bytes = encrypted_payload
         if request.headers.get('X-KEM-Encrypted') == 'true':
             kem_ct_header = request.headers.get('X-KEM-Ciphertext')
             if not kem_ct_header:
+                logger.error("KEM ciphertext header ausente mas X-KEM-Encrypted=true")
                 return jsonify({"error": "KEM ciphertext ausente"}), 400
             
-            payload_bytes = decrypt_payload(encrypted_payload, kem_ct_header)
-            if payload_bytes is None:
-                return jsonify({"error": "Falha na descriptografia"}), 400
+            try:
+                payload_bytes = decrypt_payload(encrypted_payload, kem_ct_header)
+                if payload_bytes is None:
+                    logger.error("Descriptografia retornou None")
+                    return jsonify({"error": "Falha na descriptografia"}), 400
+            except Exception as e:
+                logger.error(f"ERRO durante descriptografia KEM: {e}")
+                return jsonify({"error": f"Erro descriptografia: {str(e)}"}), 400
         
         # 4. Parsear JSON
         try:
             payload_dict = json.loads(payload_bytes.decode('utf-8'))
         except Exception as e:
-            logger.error(f"Erro ao parsear JSON: {e}")
-            return jsonify({"error": "JSON inválido"}), 400
+            logger.error(f"ERRO ao parsear JSON: {e}")
+            logger.error(f"Payload bytes (primeiros 100): {payload_bytes[:100]}")
+            return jsonify({"error": f"JSON invalido: {str(e)}"}), 400
         
         # 5. Verificar proteção contra replay
         if not check_replay_protection(payload_dict):
+            logger.warning("Replay protection falhou")
             return jsonify({"error": "Replay attack detectado ou mensagem expirada"}), 403
         
         # 6. Armazenar payload descriptografado para as rotas
         request.decrypted_json = payload_dict
         
     except Exception as e:
-        logger.error(f"Erro no middleware de segurança: {e}")
-        return jsonify({"error": "Erro na validação de segurança"}), 500
+        logger.error(f"ERRO CRITICO no middleware de segurança: {e}", exc_info=True)
+        return jsonify({"error": f"Erro na validacao: {str(e)}"}), 500
 
 
 def get_vici_session():
@@ -205,51 +223,90 @@ def get_public_key():
 
 @app.route('/inject-key', methods=['POST'])
 def inject_key():
-    data = request.decrypted_json  
-    inject_start = time.time()
     try:
+        if not hasattr(request, 'decrypted_json') or request.decrypted_json is None:
+            logger.error("request.decrypted_json nao foi atribuido pelo middleware")
+            return jsonify({"error": "Falha na autenticacao/descriptografia"}), 500
+        
+        data = request.decrypted_json  
+        inject_start = time.time()
+        
         session = get_vici_session()
-        if not session: return jsonify({"error": "VICI off"}), 500
+        if not session:
+            logger.error("VICI socket indisponivel")
+            return jsonify({"error": "VICI off"}), 500
         
-       
-        try: session.unload_shared({'id': data['key_id']})
-        except: pass
+        # Validar dados obrigatorios
+        if 'key_id' not in data or 'key_hex' not in data:
+            logger.error(f"Payload incompleto: {data.keys()}")
+            return jsonify({"error": "key_id ou key_hex ausentes"}), 400
         
-        session.load_shared({
-            'type': 'ike',
-            'data': bytes.fromhex(data['key_hex']),
-            'owners': [data['key_id']]
-        })
-        inject_time_ms = (time.time() - inject_start) * 1000
-        logger.info(f"Chave injetada para {data['key_id']} em {inject_time_ms:.2f}ms")
-        return jsonify({
-            "status": "verified_and_injected",
-            "inject_time_ms": inject_time_ms,
-            "timestamp": time.time()
-        }), 200
+        try: 
+            session.unload_shared({'id': data['key_id']})
+        except: 
+            pass
+        
+        try:
+            session.load_shared({
+                'type': 'ike',
+                'data': bytes.fromhex(data['key_hex']),
+                'owners': [data['key_id']]
+            })
+            inject_time_ms = (time.time() - inject_start) * 1000
+            logger.info(f"Chave injetada para {data['key_id']} em {inject_time_ms:.2f}ms")
+            return jsonify({
+                "status": "verified_and_injected",
+                "inject_time_ms": inject_time_ms,
+                "timestamp": time.time()
+            }), 200
+        except Exception as e:
+            logger.error(f"Erro ao injetar chave via VICI: {e}")
+            return jsonify({"error": f"VICI error: {str(e)}"}), 500
+            
     except Exception as e:
+        logger.error(f"ERRO em inject_key: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route('/terminate', methods=['POST'])
 def terminate():
-    data = request.decrypted_json
     try:
+        if not hasattr(request, 'decrypted_json') or request.decrypted_json is None:
+            logger.error("request.decrypted_json nao foi atribuido pelo middleware")
+            return jsonify({"error": "Falha na autenticacao/descriptografia"}), 500
+        
+        data = request.decrypted_json
         session = get_vici_session()
-        if not session: return jsonify({"error": "VICI off"}), 500
-        session.terminate({'ike': data.get('ike', 'alice-to-bob')})
+        if not session:
+            logger.error("VICI socket indisponivel em terminate")
+            return jsonify({"error": "VICI off"}), 500
+        
+        ike_name = data.get('ike', 'alice-to-bob')
+        session.terminate({'ike': ike_name})
+        logger.info(f"Tunnel terminado: {ike_name}")
         return jsonify({"status": "terminated"}), 200
     except Exception as e:
+        logger.error(f"ERRO em terminate: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route('/rekey', methods=['POST'])
 def rekey():
-    data = request.decrypted_json
     try:
+        if not hasattr(request, 'decrypted_json') or request.decrypted_json is None:
+            logger.error("request.decrypted_json nao foi atribuido pelo middleware")
+            return jsonify({"error": "Falha na autenticacao/descriptografia"}), 500
+        
+        data = request.decrypted_json
         session = get_vici_session()
-        if not session: return jsonify({"error": "VICI off"}), 500
-        res = list(session.initiate({'child': data.get('ike', 'net-traffic'), 'timeout': '20000'}))
+        if not session:
+            logger.error("VICI socket indisponivel em rekey")
+            return jsonify({"error": "VICI off"}), 500
+        
+        child_name = data.get('ike', 'net-traffic')
+        res = list(session.initiate({'child': child_name, 'timeout': '20000'}))
+        logger.info(f"Rekey iniciado para {child_name}")
         return jsonify({"status": "rekeyed", "details": str(res)}), 200
     except Exception as e:
+        logger.error(f"ERRO em rekey: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route('/health', methods=['GET'])
