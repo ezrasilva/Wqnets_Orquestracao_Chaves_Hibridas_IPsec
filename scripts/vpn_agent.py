@@ -18,6 +18,7 @@ VICI_SOCKET = "/var/run/charon.vici"
 AUTH_ALGO = "ML-DSA-65"
 KEM_ALGO = "ML-KEM-768"
 PQC_ALGO = os.environ.get("PQC_ALGO", "ML-KEM-768")  # Algoritmo PQ para chave híbrida (configurável)
+AEAD_CONTEXT_LABEL = "SDQC-aead-envelope-v1"
 PUB_KEY_PATH = "/scripts/orchestrator_auth.pub"
 TLS_CERT_PATH = "/scripts/certs/agent_cert.pem"
 TLS_KEY_PATH = "/scripts/certs/agent_key.pem"
@@ -79,7 +80,7 @@ def decrypt_payload(encrypted_bytes, kem_ciphertext_b64, aead_nonce_b64=None):
             # Novo: AEAD com ChaCha20-Poly1305
             if aead_nonce_b64:
                 try:
-                    aead_key = derive_aead_key(shared_secret, "SDQC-agent-context")
+                    aead_key = derive_aead_key(shared_secret, AEAD_CONTEXT_LABEL)
                     nonce = base64.b64decode(aead_nonce_b64)
                     
                     # AAD será fornecido durante a descriptografia (dentro do middleware)

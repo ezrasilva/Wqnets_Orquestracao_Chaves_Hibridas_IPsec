@@ -62,11 +62,13 @@ def hkdf_pqc_only(pqc_secret):
 def derive_aead_key(shared_secret, context_label):
     """
     Deriva uma chave AEAD (32 bytes) a partir do shared_secret usando HKDF.
-    context_label diferencia entre controller/agent para evitar key reuse.
+    A derivacao precisa ser deterministica para que emissor e receptor
+    obtenham exatamente a mesma chave para o mesmo shared_secret.
     """
-    salt = secrets.token_bytes(32)
+    label_bytes = context_label.encode("utf-8")
+    salt = hashlib.sha256(b"SDQC-AEAD-SALT|" + label_bytes).digest()
     prk = hkdf_extract(salt, shared_secret)
-    aead_key = hkdf_expand(prk, context_label.encode(), 32)
+    aead_key = hkdf_expand(prk, b"SDQC-AEAD-KEY|" + label_bytes, 32)
     return aead_key
 
 def encrypt_payload_aead(payload_dict, aead_key):

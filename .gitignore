@@ -13,3 +13,4 @@ scripts/__pycache__/hybrid_key_gen.cpython-310.pyc
 **/__pycache__/
 *.pdf
 /teste_tradeoff
+/teste_agility

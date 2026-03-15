@@ -9,7 +9,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 
 # --- CONFIGURAÇÕES DO EXPERIMENTO DE TRADE-OFF ---
-INTERVALS = [2, 5, 10, 30, 60]  # Intervalos de rotação em segundos
+INTERVALS = [2, 5, 15, 10, 30, 60]  # Intervalos de rotação em segundos
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULTS_BASE_DIR = os.path.join(SCRIPT_DIR, "teste_tradeoff")
 SCRIPTS_DIR = os.path.join(SCRIPT_DIR, "scripts")

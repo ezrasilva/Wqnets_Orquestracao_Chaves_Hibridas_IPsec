@@ -34,19 +34,13 @@ from concurrent.futures import ThreadPoolExecutor
 
 # --- CONFIGURAÇÕES DO EXPERIMENTO DE AGILIDADE ---
 PQC_ALGORITHMS = [
-    "ML-KEM-768",           # NIST Standard
-    "BIKE-L1",
-    "BIKE-L3", 
-    "HQC-128",
-    "HQC-256",
-    "FrodoKEM-640-AES",
-    "FrodoKEM-976-AES",
-    "Classic-McEliece-348864",
-    "Classic-McEliece-460896"
+    "ML-KEM-768",            # baseline principal (NIST)
+    "BIKE-L1",               # code-based (familia BIKE)               # code-based (familia HQC)
+    "FrodoKEM-640-AES",      # lattice sem modulo (contraste)
+    "Classic-McEliece-348864"# code-based classico (chaves grandes)
 ]
 
 ROTATION_INTERVAL = 10  # Fixo para agilidade
-TEST_DURATION = 30      # Segundos por teste
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULTS_BASE_DIR = os.path.join(SCRIPT_DIR, "teste_agility")
@@ -64,7 +58,9 @@ logger = logging.getLogger("Agility")
 class AgilityController:
     """Controller para Bateria B — Agilidade Criptográfica"""
     
-    def __init__(self, iterations=3):
+    def __init__(self, duration, profile, iterations):
+        self.duration = duration
+        self.profile = profile
         self.iterations = iterations
         self.running = True
         self.logical_nodes = ['alice', 'bob', 'carol', 'dave']
@@ -122,9 +118,15 @@ class AgilityController:
         
         logger.info("⏳ Aguardando estabilização (30s)...")
         time.sleep(30)
+        
+        # Aplica perfil de rede WAN se necessário
+        if self.profile != "perfect":
+            containers_str = " ".join(self.real_containers)
+            cmd = f"python3 {SCRIPTS_DIR}/simulate_network_conditions.py --profile {self.profile} --containers {containers_str}"
+            self.run_cmd(cmd)
 
     def monitor_resources_thread(self, pqc_algo_folder):
-        """Monitora CPU/memória do orquestrador durante teste"""
+        """Monitora CPU/memória de alice, bob e orquestrador durante teste"""
         res_file = os.path.join(pqc_algo_folder, RESOURCE_FILE)
         with open(res_file, 'w') as f:
             f.write("timestamp,container,cpu_perc,mem_mib\n")
@@ -132,9 +134,11 @@ class AgilityController:
         while self.running:
             try:
                 ts = time.time()
+                # Monitora alice, bob e orchestrator
+                containers_to_monitor = ['alice', 'bob', self.orchestrator_name]
                 cmd = (
                     "docker stats " + 
-                    " ".join([self.orchestrator_name]) + 
+                    " ".join(containers_to_monitor) + 
                     " --no-stream --format '{{.Name}},{{.CPUPerc}},{{.MemUsage}}'"
                 )
                 res = self.run_cmd(cmd)
@@ -153,7 +157,7 @@ class AgilityController:
 
     def run_iperf_tests(self, iteration, folder):
         """Executa teste de throughput com iperf3"""
-        logger.info(f"📊 [Iter {iteration}] Iniciando teste de vazão ({TEST_DURATION}s)...")
+        logger.info(f"📊 [Iter {iteration}] Iniciando teste de vazão ({self.duration}s)...")
         
         # Inicia servidor iperf3 em bob
         self.docker_exec("bob", "iperf3 -s -D", detached=True)
@@ -161,7 +165,7 @@ class AgilityController:
         
         # Teste: alice -> bob
         target_ip = "192.168.100.11"
-        cmd = f"iperf3 -c {target_ip} -t {TEST_DURATION} -J"
+        cmd = f"iperf3 -c {target_ip} -t {self.duration} -J"
         res = self.docker_exec("alice", cmd)
         
         if res and res.stdout:
@@ -224,25 +228,45 @@ class AgilityController:
             return {}
 
     def extract_cpu_metrics(self, resource_file):
-        """Extrai CPU média do orquestrador durante teste"""
+        """Extrai CPU média de alice, bob e orquestrador durante teste"""
         try:
-            cpu_values = []
+            cpu_values_orchestrator = []
+            cpu_values_alice = []
+            cpu_values_bob = []
+            
             with open(resource_file, 'r') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
                     try:
+                        container = row.get('container', '')
                         cpu = float(row.get('cpu_perc', '0').replace('%', ''))
+                        
                         if cpu > 0:
-                            cpu_values.append(cpu)
+                            if container == 'orchestrator':
+                                cpu_values_orchestrator.append(cpu)
+                            elif container == 'alice':
+                                cpu_values_alice.append(cpu)
+                            elif container == 'bob':
+                                cpu_values_bob.append(cpu)
                     except ValueError:
                         pass
             
-            avg_cpu = sum(cpu_values) / len(cpu_values) if cpu_values else 0
-            max_cpu = max(cpu_values) if cpu_values else 0
+            avg_cpu_orch = sum(cpu_values_orchestrator) / len(cpu_values_orchestrator) if cpu_values_orchestrator else 0
+            max_cpu_orch = max(cpu_values_orchestrator) if cpu_values_orchestrator else 0
+            
+            avg_cpu_alice = sum(cpu_values_alice) / len(cpu_values_alice) if cpu_values_alice else 0
+            max_cpu_alice = max(cpu_values_alice) if cpu_values_alice else 0
+            
+            avg_cpu_bob = sum(cpu_values_bob) / len(cpu_values_bob) if cpu_values_bob else 0
+            max_cpu_bob = max(cpu_values_bob) if cpu_values_bob else 0
             
             return {
-                'avg_cpu_perc': round(avg_cpu, 2),
-                'max_cpu_perc': round(max_cpu, 2)
+                'avg_cpu_orchestrator_perc': round(avg_cpu_orch, 2),
+                'max_cpu_orchestrator_perc': round(max_cpu_orch, 2),
+                'avg_cpu_alice_perc': round(avg_cpu_alice, 2),
+                'max_cpu_alice_perc': round(max_cpu_alice, 2),
+                'avg_cpu_bob_perc': round(avg_cpu_bob, 2),
+                'max_cpu_bob_perc': round(max_cpu_bob, 2)
             }
         except Exception as e:
             logger.error(f"Erro ao extrair métricas CPU: {e}")
@@ -318,7 +342,9 @@ class AgilityController:
                     logger.info(f"\n📊 RESUMO [{pqc_algo}]:")
                     logger.info(f"   Hybridization HKDF:  {sdn_data.get('avg_hkdf_mix_ms', 'N/A')} ms (avg)")
                     logger.info(f"   Total Overhead:      {sdn_data.get('avg_total_overhead_ms', 'N/A')} ms (avg)")
-                    logger.info(f"   CPU Orquestrador:    {cpu_data.get('avg_cpu_perc', 'N/A')}% (avg)")
+                    logger.info(f"   CPU Orquestrador:    {cpu_data.get('avg_cpu_orchestrator_perc', 'N/A')}% (avg)")
+                    logger.info(f"   CPU Alice:           {cpu_data.get('avg_cpu_alice_perc', 'N/A')}% (avg)")
+                    logger.info(f"   CPU Bob:             {cpu_data.get('avg_cpu_bob_perc', 'N/A')}% (avg)")
                     
                 finally:
                     self.running = False
@@ -339,7 +365,9 @@ class AgilityController:
             fieldnames = ['pqc_algorithm', 'avg_hkdf_mix_ms', 'max_hkdf_mix_ms', 
                          'min_hkdf_mix_ms', 'count', 'avg_total_overhead_ms',
                          'max_total_overhead_ms', 'min_total_overhead_ms',
-                         'avg_cpu_perc', 'max_cpu_perc', 'error']
+                         'avg_cpu_orchestrator_perc', 'max_cpu_orchestrator_perc',
+                         'avg_cpu_alice_perc', 'max_cpu_alice_perc',
+                         'avg_cpu_bob_perc', 'max_cpu_bob_perc', 'error']
             
             with open(summary_file, 'w', newline='') as f:
                 writer = csv.DictWriter(f, fieldnames=fieldnames, restval='')
@@ -362,10 +390,21 @@ if __name__ == "__main__":
         description="Bateria B — Agilidade Criptográfica (varia PQC_ALGO para hibridização)"
     )
     parser.add_argument(
+        "--profile",
+        default="wan-fiber",
+        help="Perfil de rede (perfect, wan-fiber, wan-3g, etc). Padrão: wan-fiber"
+    )
+    parser.add_argument(
         "--iterations", 
         type=int, 
-        default=3,
-        help="Número de iterações por algoritmo PQC (padrão: 3)"
+        default=1,
+        help="Número de iterações por algoritmo PQC (padrão: 1)"
+    )
+    parser.add_argument(
+        "--duration",
+        type=int,
+        default=60,
+        help="Duração do teste iperf3 em segundos (padrão: 60)"
     )
     parser.add_argument(
         "--pqcs",
@@ -380,25 +419,23 @@ if __name__ == "__main__":
         PQC_ALGORITHMS = args.pqcs
         logger.info(f"Usando PQC algorithms customizados: {PQC_ALGORITHMS}")
     
-    controller = AgilityController(iterations=args.iterations)
+    controller = AgilityController(args.duration, args.profile, args.iterations)
     summary = controller.run_agility_battery()
     
     # Imprime sumário tabular
     logger.info("\nSUMÁRIO FINAL DE AGILIDADE:")
-    logger.info("-" * 100)
-    logger.info(f"{'PQC Algorithm':<30} {'Hybrid(ms)':<15} {'Total(ms)':<15} {'CPU(%)':<10}")
-    logger.info("-" * 100)
+    logger.info("-" * 120)
+    logger.info(f"{'PQC Algorithm':<30} {'Hybrid(ms)':<15} {'Total(ms)':<15} {'CPU-Orch(%)':<12} {'CPU-Alice(%)':<13} {'CPU-Bob(%)':<10}")
+    logger.info("-" * 120)
     
     for row in summary:
         pqc = row.get('pqc_algorithm', 'N/A')
         hkdf = row.get('avg_hkdf_mix_ms', 'N/A')
         total = row.get('avg_total_overhead_ms', 'N/A')
-        cpu = row.get('avg_cpu_perc', 'N/A')
-        logger.info(f"{pqc:<30} {str(hkdf):<15} {str(total):<15} {str(cpu):<10}")
+        cpu_orch = row.get('avg_cpu_orchestrator_perc', 'N/A')
+        cpu_alice = row.get('avg_cpu_alice_perc', 'N/A')
+        cpu_bob = row.get('avg_cpu_bob_perc', 'N/A')
+        logger.info(f"{pqc:<30} {str(hkdf):<15} {str(total):<15} {str(cpu_orch):<12} {str(cpu_alice):<13} {str(cpu_bob):<10}")
     
-    logger.info("-" * 100)
+    logger.info("-" * 120)
 
-    logger.info(" Bateria de Agilidade Criptográfica Finalizada!")
-
-if __name__ == "__main__":
-    main()

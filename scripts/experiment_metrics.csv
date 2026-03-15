@@ -1,0 +1,251 @@
+timestamp,cycle,connection,event_type,value_ms,status_code,details
+1773587785.419020,1,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.55
+1773587785.419209,1,alice-bob,QKD_FETCH,1.5490,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587785.604879,1,alice-bob,PQC_GEN,185.3724,200,Classic-McEliece-460896
+1773587785.605428,1,alice-bob,HKDF_MIX,0.4144,200,pqc_only
+1773587785.605542,1,alice-bob,HYBRIDIZATION_OVERHEAD,187.3357,0,qkd=1.55|pqc=185.37|hkdf=0.41|mode=pqc_only
+1773587785.608563,1,alice-bob,PUSH_KEY,2.7049,500,target=alice
+1773587785.610456,1,alice-bob,PUSH_KEY,1.8058,500,target=bob
+1773587796.626173,2,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.64
+1773587796.626537,2,alice-bob,QKD_FETCH,1.6425,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587796.888289,2,alice-bob,PQC_GEN,261.4462,200,Classic-McEliece-460896
+1773587796.889667,2,alice-bob,HKDF_MIX,1.2109,200,pqc_only
+1773587796.890016,2,alice-bob,HYBRIDIZATION_OVERHEAD,264.2996,0,qkd=1.64|pqc=261.45|hkdf=1.21|mode=pqc_only
+1773587796.923559,2,alice-bob,PUSH_KEY,33.1488,200,target=alice
+1773587796.955199,2,alice-bob,PUSH_KEY,31.3294,200,target=bob
+1773587799.044880,2,alice-bob,TUNNEL_ESTABLISH,63.8337,200,success
+1773587799.045048,2,alice-bob,E2E_REKEY_LATENCY,2154.4721,200,success
+1773587810.061433,3,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.76
+1773587810.061844,3,alice-bob,QKD_FETCH,1.7598,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587810.215122,3,alice-bob,PQC_GEN,153.0070,200,Classic-McEliece-460896
+1773587810.215410,3,alice-bob,HKDF_MIX,0.1485,200,pqc_only
+1773587810.215468,3,alice-bob,HYBRIDIZATION_OVERHEAD,154.9153,0,qkd=1.76|pqc=153.01|hkdf=0.15|mode=pqc_only
+1773587810.239903,3,alice-bob,PUSH_KEY,24.0476,200,target=alice
+1773587810.262229,3,alice-bob,PUSH_KEY,22.2135,200,target=bob
+1773587812.309337,3,alice-bob,TUNNEL_ESTABLISH,27.7305,200,success
+1773587812.309460,3,alice-bob,E2E_REKEY_LATENCY,2093.4825,200,success
+1773587823.324616,4,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.41
+1773587823.325808,4,alice-bob,QKD_FETCH,1.4095,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587823.446482,4,alice-bob,PQC_GEN,120.3821,200,Classic-McEliece-460896
+1773587823.446996,4,alice-bob,HKDF_MIX,0.2210,200,pqc_only
+1773587823.447203,4,alice-bob,HYBRIDIZATION_OVERHEAD,122.0126,0,qkd=1.41|pqc=120.38|hkdf=0.22|mode=pqc_only
+1773587823.623898,4,alice-bob,PUSH_KEY,176.3711,200,target=alice
+1773587823.794725,4,alice-bob,PUSH_KEY,170.5112,200,target=bob
+1773587826.016908,4,alice-bob,TUNNEL_ESTABLISH,142.7424,200,success
+1773587826.017139,4,alice-bob,E2E_REKEY_LATENCY,2569.3834,200,success
+1773587837.031552,5,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=0.80
+1773587837.031826,5,alice-bob,QKD_FETCH,0.7968,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587837.120927,5,alice-bob,PQC_GEN,88.8133,200,Classic-McEliece-460896
+1773587837.121259,5,alice-bob,HKDF_MIX,0.2131,200,pqc_only
+1773587837.121401,5,alice-bob,HYBRIDIZATION_OVERHEAD,89.8232,0,qkd=0.80|pqc=88.81|hkdf=0.21|mode=pqc_only
+1773587837.272335,5,alice-bob,PUSH_KEY,150.4529,200,target=alice
+1773587837.447954,5,alice-bob,PUSH_KEY,175.4675,200,target=bob
+1773587839.671372,5,alice-bob,TUNNEL_ESTABLISH,127.4521,200,success
+1773587839.671536,5,alice-bob,E2E_REKEY_LATENCY,2549.4902,200,success
+1773587850.686962,6,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.84
+1773587850.687319,6,alice-bob,QKD_FETCH,1.8377,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587850.884654,6,alice-bob,PQC_GEN,196.9604,200,Classic-McEliece-460896
+1773587850.885176,6,alice-bob,HKDF_MIX,0.3569,200,pqc_only
+1773587850.885303,6,alice-bob,HYBRIDIZATION_OVERHEAD,199.1551,0,qkd=1.84|pqc=196.96|hkdf=0.36|mode=pqc_only
+1773587851.088782,6,alice-bob,PUSH_KEY,203.1813,200,target=alice
+1773587851.259114,6,alice-bob,PUSH_KEY,169.9893,200,target=bob
+1773587853.477575,6,alice-bob,TUNNEL_ESTABLISH,131.8185,200,success
+1773587853.477801,6,alice-bob,E2E_REKEY_LATENCY,2591.9790,200,success
+1773587864.490898,7,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=0.80
+1773587864.491219,7,alice-bob,QKD_FETCH,0.8004,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587864.629653,7,alice-bob,PQC_GEN,138.1905,200,Classic-McEliece-460896
+1773587864.629950,7,alice-bob,HKDF_MIX,0.1652,200,pqc_only
+1773587864.630031,7,alice-bob,HYBRIDIZATION_OVERHEAD,139.1561,0,qkd=0.80|pqc=138.19|hkdf=0.17|mode=pqc_only
+1773587864.803429,7,alice-bob,PUSH_KEY,172.9507,200,target=alice
+1773587864.972713,7,alice-bob,PUSH_KEY,169.1084,200,target=bob
+1773587867.180577,7,alice-bob,TUNNEL_ESTABLISH,128.8822,200,success
+1773587867.180998,7,alice-bob,E2E_REKEY_LATENCY,2550.0991,200,success
+1773587878.195431,8,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.65
+1773587878.196367,8,alice-bob,QKD_FETCH,1.6489,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587878.289641,8,alice-bob,PQC_GEN,92.8068,200,Classic-McEliece-460896
+1773587878.289841,8,alice-bob,HKDF_MIX,0.0899,200,pqc_only
+1773587878.289870,8,alice-bob,HYBRIDIZATION_OVERHEAD,94.5456,0,qkd=1.65|pqc=92.81|hkdf=0.09|mode=pqc_only
+1773587878.460278,8,alice-bob,PUSH_KEY,170.1400,200,target=alice
+1773587878.626296,8,alice-bob,PUSH_KEY,165.7808,200,target=bob
+1773587880.856399,8,alice-bob,TUNNEL_ESTABLISH,143.1253,200,success
+1773587880.856582,8,alice-bob,E2E_REKEY_LATENCY,2566.2644,200,success
+1773587891.872273,9,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.36
+1773587891.872668,9,alice-bob,QKD_FETCH,1.3568,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587891.976557,9,alice-bob,PQC_GEN,103.5812,200,Classic-McEliece-460896
+1773587891.977090,9,alice-bob,HKDF_MIX,0.1915,200,pqc_only
+1773587891.977312,9,alice-bob,HYBRIDIZATION_OVERHEAD,105.1295,0,qkd=1.36|pqc=103.58|hkdf=0.19|mode=pqc_only
+1773587892.145892,9,alice-bob,PUSH_KEY,168.3271,200,target=alice
+1773587892.329208,9,alice-bob,PUSH_KEY,183.1067,200,target=bob
+1773587894.561231,9,alice-bob,TUNNEL_ESTABLISH,130.7983,200,success
+1773587894.561501,9,alice-bob,E2E_REKEY_LATENCY,2583.6670,200,success
+1773587905.577058,10,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.21
+1773587905.577372,10,alice-bob,QKD_FETCH,1.2133,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587905.686373,10,alice-bob,PQC_GEN,108.6941,200,Classic-McEliece-460896
+1773587905.686799,10,alice-bob,HKDF_MIX,0.2220,200,pqc_only
+1773587905.686909,10,alice-bob,HYBRIDIZATION_OVERHEAD,110.1294,0,qkd=1.21|pqc=108.69|hkdf=0.22|mode=pqc_only
+1773587905.856674,10,alice-bob,PUSH_KEY,169.4155,200,target=alice
+1773587906.019001,10,alice-bob,PUSH_KEY,162.0510,200,target=bob
+1773587908.254471,10,alice-bob,TUNNEL_ESTABLISH,157.7201,200,success
+1773587908.254748,10,alice-bob,E2E_REKEY_LATENCY,2567.2143,200,success
+1773587919.271040,11,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.65
+1773587919.271413,11,alice-bob,QKD_FETCH,1.6477,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587919.399176,11,alice-bob,PQC_GEN,127.4061,200,Classic-McEliece-460896
+1773587919.401230,11,alice-bob,HKDF_MIX,0.8876,200,pqc_only
+1773587919.401354,11,alice-bob,HYBRIDIZATION_OVERHEAD,129.9415,0,qkd=1.65|pqc=127.41|hkdf=0.89|mode=pqc_only
+1773587919.564162,11,alice-bob,PUSH_KEY,162.4713,200,target=alice
+1773587919.731271,11,alice-bob,PUSH_KEY,166.9815,200,target=bob
+1773587921.946199,11,alice-bob,TUNNEL_ESTABLISH,130.4216,200,success
+1773587921.946539,11,alice-bob,E2E_REKEY_LATENCY,2544.5082,200,success
+1773587932.962435,12,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.50
+1773587932.962837,12,alice-bob,QKD_FETCH,1.4999,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587933.105649,12,alice-bob,PQC_GEN,142.4551,200,Classic-McEliece-460896
+1773587933.105953,12,alice-bob,HKDF_MIX,0.1416,200,pqc_only
+1773587933.106021,12,alice-bob,HYBRIDIZATION_OVERHEAD,144.0966,0,qkd=1.50|pqc=142.46|hkdf=0.14|mode=pqc_only
+1773587933.284489,12,alice-bob,PUSH_KEY,178.1638,200,target=alice
+1773587933.468750,12,alice-bob,PUSH_KEY,183.7032,200,target=bob
+1773587935.682388,12,alice-bob,TUNNEL_ESTABLISH,128.8466,200,success
+1773587935.682557,12,alice-bob,E2E_REKEY_LATENCY,2576.0667,200,success
+1773587946.699008,13,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.60
+1773587946.699344,13,alice-bob,QKD_FETCH,1.5967,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587946.824197,13,alice-bob,PQC_GEN,124.5515,200,Classic-McEliece-460896
+1773587946.824791,13,alice-bob,HKDF_MIX,0.1650,200,pqc_only
+1773587946.825078,13,alice-bob,HYBRIDIZATION_OVERHEAD,126.3132,0,qkd=1.60|pqc=124.55|hkdf=0.16|mode=pqc_only
+1773587946.998935,13,alice-bob,PUSH_KEY,173.5933,200,target=alice
+1773587947.168965,13,alice-bob,PUSH_KEY,169.7097,200,target=bob
+1773587949.410602,13,alice-bob,TUNNEL_ESTABLISH,151.9008,200,success
+1773587949.410870,13,alice-bob,E2E_REKEY_LATENCY,2585.2635,200,success
+1773587960.424057,14,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=0.92
+1773587960.424270,14,alice-bob,QKD_FETCH,0.9229,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587960.518857,14,alice-bob,PQC_GEN,94.3496,200,Classic-McEliece-460896
+1773587960.519054,14,alice-bob,HKDF_MIX,0.0956,200,pqc_only
+1773587960.519098,14,alice-bob,HYBRIDIZATION_OVERHEAD,95.3681,0,qkd=0.92|pqc=94.35|hkdf=0.10|mode=pqc_only
+1773587960.687386,14,alice-bob,PUSH_KEY,168.0913,200,target=alice
+1773587960.843732,14,alice-bob,PUSH_KEY,156.1840,200,target=bob
+1773587963.070908,14,alice-bob,TUNNEL_ESTABLISH,144.4325,200,success
+1773587963.071186,14,alice-bob,E2E_REKEY_LATENCY,2551.6138,200,success
+1773587974.086089,15,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.49
+1773587974.086422,15,alice-bob,QKD_FETCH,1.4896,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587974.195733,15,alice-bob,PQC_GEN,108.9849,200,Classic-McEliece-460896
+1773587974.196024,15,alice-bob,HKDF_MIX,0.1652,200,pqc_only
+1773587974.196100,15,alice-bob,HYBRIDIZATION_OVERHEAD,110.6398,0,qkd=1.49|pqc=108.98|hkdf=0.17|mode=pqc_only
+1773587974.371236,15,alice-bob,PUSH_KEY,174.7093,200,target=alice
+1773587974.537436,15,alice-bob,PUSH_KEY,165.9675,200,target=bob
+1773587976.773317,15,alice-bob,TUNNEL_ESTABLISH,145.7026,200,success
+1773587976.773521,15,alice-bob,E2E_REKEY_LATENCY,2576.7930,200,success
+1773587987.789779,16,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.55
+1773587987.790128,16,alice-bob,QKD_FETCH,1.5543,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773587987.906921,16,alice-bob,PQC_GEN,116.5383,200,Classic-McEliece-460896
+1773587987.907212,16,alice-bob,HKDF_MIX,0.1557,200,pqc_only
+1773587987.907285,16,alice-bob,HYBRIDIZATION_OVERHEAD,118.2482,0,qkd=1.55|pqc=116.54|hkdf=0.16|mode=pqc_only
+1773587988.077164,16,alice-bob,PUSH_KEY,169.5390,200,target=alice
+1773587988.241596,16,alice-bob,PUSH_KEY,164.2146,200,target=bob
+1773587990.448174,16,alice-bob,TUNNEL_ESTABLISH,125.5417,200,success
+1773587990.448370,16,alice-bob,E2E_REKEY_LATENCY,2540.5579,200,success
+1773588001.453357,17,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=0.65
+1773588001.453572,17,alice-bob,QKD_FETCH,0.6537,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773588001.618537,17,alice-bob,PQC_GEN,164.6795,200,Classic-McEliece-460896
+1773588001.618812,17,alice-bob,HKDF_MIX,0.1516,200,pqc_only
+1773588001.618892,17,alice-bob,HYBRIDIZATION_OVERHEAD,165.4849,0,qkd=0.65|pqc=164.68|hkdf=0.15|mode=pqc_only
+1773588001.773499,17,alice-bob,PUSH_KEY,154.2408,200,target=alice
+1773588001.951298,17,alice-bob,PUSH_KEY,177.4814,200,target=bob
+1773588004.194115,17,alice-bob,TUNNEL_ESTABLISH,159.8072,200,success
+1773588004.194489,17,alice-bob,E2E_REKEY_LATENCY,2574.8582,200,success
+1773588015.211580,18,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.47
+1773588015.212160,18,alice-bob,QKD_FETCH,1.4710,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773588015.359412,18,alice-bob,PQC_GEN,146.8394,200,Classic-McEliece-460896
+1773588015.359735,18,alice-bob,HKDF_MIX,0.1621,200,pqc_only
+1773588015.359795,18,alice-bob,HYBRIDIZATION_OVERHEAD,148.4725,0,qkd=1.47|pqc=146.84|hkdf=0.16|mode=pqc_only
+1773588015.536369,18,alice-bob,PUSH_KEY,176.2884,200,target=alice
+1773588015.697625,18,alice-bob,PUSH_KEY,161.1209,200,target=bob
+1773588017.953011,18,alice-bob,TUNNEL_ESTABLISH,161.5772,200,success
+1773588017.953443,18,alice-bob,E2E_REKEY_LATENCY,2592.9315,200,success
+1773588028.965667,19,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=0.84
+1773588028.965893,19,alice-bob,QKD_FETCH,0.8354,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773588029.077209,19,alice-bob,PQC_GEN,111.0516,200,Classic-McEliece-460896
+1773588029.077562,19,alice-bob,HKDF_MIX,0.1998,200,pqc_only
+1773588029.077646,19,alice-bob,HYBRIDIZATION_OVERHEAD,112.0868,0,qkd=0.84|pqc=111.05|hkdf=0.20|mode=pqc_only
+1773588029.240756,19,alice-bob,PUSH_KEY,162.7386,200,target=alice
+1773588029.405673,19,alice-bob,PUSH_KEY,164.7468,200,target=bob
+1773588031.633079,19,alice-bob,TUNNEL_ESTABLISH,145.0570,200,success
+1773588031.633347,19,alice-bob,E2E_REKEY_LATENCY,2555.0611,200,success
+1773588042.643459,20,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.08
+1773588042.643797,20,alice-bob,QKD_FETCH,1.0757,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773588042.766427,20,alice-bob,PQC_GEN,122.3409,200,Classic-McEliece-460896
+1773588042.766707,20,alice-bob,HKDF_MIX,0.1538,200,pqc_only
+1773588042.766780,20,alice-bob,HYBRIDIZATION_OVERHEAD,123.5704,0,qkd=1.08|pqc=122.34|hkdf=0.15|mode=pqc_only
+1773588042.917780,20,alice-bob,PUSH_KEY,150.5992,200,target=alice
+1773588043.089783,20,alice-bob,PUSH_KEY,171.8419,200,target=bob
+1773588045.323401,20,alice-bob,TUNNEL_ESTABLISH,141.6011,200,success
+1773588045.323709,20,alice-bob,E2E_REKEY_LATENCY,2556.2210,200,success
+1773588056.339843,21,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.72
+1773588056.340283,21,alice-bob,QKD_FETCH,1.7176,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773588056.521189,21,alice-bob,PQC_GEN,180.5463,200,Classic-McEliece-460896
+1773588056.521516,21,alice-bob,HKDF_MIX,0.1862,200,pqc_only
+1773588056.521608,21,alice-bob,HYBRIDIZATION_OVERHEAD,182.4501,0,qkd=1.72|pqc=180.55|hkdf=0.19|mode=pqc_only
+1773588056.678577,21,alice-bob,PUSH_KEY,156.6105,200,target=alice
+1773588056.849802,21,alice-bob,PUSH_KEY,170.8970,200,target=bob
+1773588059.065984,21,alice-bob,TUNNEL_ESTABLISH,129.9055,200,success
+1773588059.066288,21,alice-bob,E2E_REKEY_LATENCY,2544.0207,200,success
+1773588070.084801,22,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=2.57
+1773588070.085233,22,alice-bob,QKD_FETCH,2.5704,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773588070.193040,22,alice-bob,PQC_GEN,107.4886,200,Classic-McEliece-460896
+1773588070.193356,22,alice-bob,HKDF_MIX,0.1991,200,pqc_only
+1773588070.193447,22,alice-bob,HYBRIDIZATION_OVERHEAD,110.2581,0,qkd=2.57|pqc=107.49|hkdf=0.20|mode=pqc_only
+1773588070.356507,22,alice-bob,PUSH_KEY,162.4992,200,target=alice
+1773588070.525249,22,alice-bob,PUSH_KEY,168.4792,200,target=bob
+1773588072.739143,22,alice-bob,TUNNEL_ESTABLISH,128.9022,200,success
+1773588072.739394,22,alice-bob,E2E_REKEY_LATENCY,2545.1376,200,success
+1773588083.755317,23,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.86
+1773588083.755914,23,alice-bob,QKD_FETCH,1.8589,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773588083.867527,23,alice-bob,PQC_GEN,111.2723,200,Classic-McEliece-460896
+1773588083.867997,23,alice-bob,HKDF_MIX,0.3140,200,pqc_only
+1773588083.868152,23,alice-bob,HYBRIDIZATION_OVERHEAD,113.4453,0,qkd=1.86|pqc=111.27|hkdf=0.31|mode=pqc_only
+1773588084.029678,23,alice-bob,PUSH_KEY,161.1280,200,target=alice
+1773588084.200500,23,alice-bob,PUSH_KEY,170.5222,200,target=bob
+1773588086.444562,23,alice-bob,TUNNEL_ESTABLISH,158.5059,200,success
+1773588086.444820,23,alice-bob,E2E_REKEY_LATENCY,2576.0140,200,success
+1773588097.461330,24,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.68
+1773588097.461713,24,alice-bob,QKD_FETCH,1.6849,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773588097.579514,24,alice-bob,PQC_GEN,117.5597,200,Classic-McEliece-460896
+1773588097.579940,24,alice-bob,HKDF_MIX,0.1895,200,pqc_only
+1773588097.580031,24,alice-bob,HYBRIDIZATION_OVERHEAD,119.4341,0,qkd=1.68|pqc=117.56|hkdf=0.19|mode=pqc_only
+1773588097.749585,24,alice-bob,PUSH_KEY,169.2750,200,target=alice
+1773588097.905778,24,alice-bob,PUSH_KEY,155.9112,200,target=bob
+1773588100.132003,24,alice-bob,TUNNEL_ESTABLISH,139.3940,200,success
+1773588100.132198,24,alice-bob,E2E_REKEY_LATENCY,2551.6949,200,success
+1773588111.147874,25,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.36
+1773588111.148231,25,alice-bob,QKD_FETCH,1.3587,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773588111.243483,25,alice-bob,PQC_GEN,94.9893,200,Classic-McEliece-460896
+1773588111.243814,25,alice-bob,HKDF_MIX,0.1986,200,pqc_only
+1773588111.243910,25,alice-bob,HYBRIDIZATION_OVERHEAD,96.5466,0,qkd=1.36|pqc=94.99|hkdf=0.20|mode=pqc_only
+1773588111.416114,25,alice-bob,PUSH_KEY,171.8032,200,target=alice
+1773588111.588810,25,alice-bob,PUSH_KEY,172.4384,200,target=bob
+1773588113.846870,25,alice-bob,TUNNEL_ESTABLISH,155.4275,200,success
+1773588113.847485,25,alice-bob,E2E_REKEY_LATENCY,2602.5615,200,success
+1773588124.863191,26,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=1.38
+1773588124.863567,26,alice-bob,QKD_FETCH,1.3804,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773588124.961655,26,alice-bob,PQC_GEN,97.6834,200,Classic-McEliece-460896
+1773588124.961958,26,alice-bob,HKDF_MIX,0.1714,200,pqc_only
+1773588124.962031,26,alice-bob,HYBRIDIZATION_OVERHEAD,99.2353,0,qkd=1.38|pqc=97.68|hkdf=0.17|mode=pqc_only
+1773588125.125273,26,alice-bob,PUSH_KEY,162.8904,200,target=alice
+1773588125.288128,26,alice-bob,PUSH_KEY,162.6475,200,target=bob
+1773588127.500015,26,alice-bob,TUNNEL_ESTABLISH,124.7904,200,success
+1773588127.500191,26,alice-bob,E2E_REKEY_LATENCY,2537.6348,200,success
+1773588138.516507,27,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=2.72
+1773588138.533864,27,alice-bob,QKD_FETCH,2.7204,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773588138.648234,27,alice-bob,PQC_GEN,113.9674,200,Classic-McEliece-460896
+1773588138.648749,27,alice-bob,HKDF_MIX,0.2015,200,pqc_only
+1773588138.648900,27,alice-bob,HYBRIDIZATION_OVERHEAD,116.8892,0,qkd=2.72|pqc=113.97|hkdf=0.20|mode=pqc_only
+1773588138.830810,27,alice-bob,PUSH_KEY,181.2658,200,target=alice
+1773588138.985210,27,alice-bob,PUSH_KEY,154.2211,200,target=bob
+1773588141.204270,27,alice-bob,TUNNEL_ESTABLISH,128.7029,200,success
+1773588141.204546,27,alice-bob,E2E_REKEY_LATENCY,2554.7271,200,success
+1773588152.221133,28,alice-bob,KEY_AVAILABILITY,0.0000,0,qkd_fetch_ms=2.33
+1773588152.221787,28,alice-bob,QKD_FETCH,2.3346,0,"failed:Could not find the TLS certificate file, invalid path: /scripts/certs/sae-1.crt"
+1773588152.337157,28,alice-bob,PQC_GEN,114.9240,200,Classic-McEliece-460896
+1773588152.337471,28,alice-bob,HKDF_MIX,0.1748,200,pqc_only
+1773588152.337546,28,alice-bob,HYBRIDIZATION_OVERHEAD,117.4333,0,qkd=2.33|pqc=114.92|hkdf=0.17|mode=pqc_only
+1773588152.513934,28,alice-bob,PUSH_KEY,176.0201,200,target=alice
+1773588152.690234,28,alice-bob,PUSH_KEY,176.0187,200,target=bob
+1773588154.938578,28,alice-bob,TUNNEL_ESTABLISH,150.5744,200,success
+1773588154.939003,28,alice-bob,E2E_REKEY_LATENCY,2600.6660,200,success

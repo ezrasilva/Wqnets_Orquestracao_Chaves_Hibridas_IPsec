@@ -38,6 +38,7 @@ HTTP_TIMEOUT = 10
 
 PQC_ALGO = os.environ.get("PQC_ALGO", "ML-KEM-768")  # Algoritmo PQ para chave híbrida (configurável)
 KEM_ALGO = "ML-KEM-768"  # Algoritmo para criptografia de envelope
+AEAD_CONTEXT_LABEL = "SDQC-aead-envelope-v1"
 
 
 MAX_MESSAGE_AGE_SECONDS = 30
@@ -55,6 +56,12 @@ if _agent_ca_env in ("false", "0", "no", "none", ""):
     AGENT_CA_BUNDLE = False
 else:
     AGENT_CA_BUNDLE = os.environ.get("AGENT_CA_BUNDLE")
+
+# Se o bundle CA do QuKayDee nao estiver presente no container,
+# usa verify=False para evitar interrupcao total do experimento.
+if CA_CERT and not os.path.exists(CA_CERT):
+    print(f"[WARN] CA bundle ausente em {CA_CERT}; usando verify=False para QuKayDee.")
+    CA_CERT = False
 
 CONNECTIONS = {
     'alice-bob': {
@@ -107,7 +114,6 @@ def log_metric(cycle, conn, event, value_ms, status_code=0, details=""):
 logging.basicConfig(level=logging.INFO, format='[SDN-Multi] %(asctime)s - %(message)s')
 logger = logging.getLogger("SDN-Multi")
 
-# Carregamento da Chave de Assinatura
 try:
     with open(PRIV_KEY_PATH, "rb") as f:
         SIGNING_KEY = f.read()
@@ -116,7 +122,6 @@ except Exception as e:
     logger.error(f"Nao foi possivel carregar chave privada: {e}")
     exit(1)
 
-# Geração/Carregamento das Chaves KEM do Controlador
 try:
     if HAS_OQS:
         kem = oqs.KeyEncapsulation(KEM_ALGO)
@@ -156,7 +161,7 @@ def send_encrypted_signed_request(url, endpoint, payload_dict, agent_kem_public_
                     kem_ciphertext, shared_secret = kem_client.encap_secret(agent_kem_public_key)
                 
                 # AEAD: Derivar chave a partir do shared_secret
-                aead_key = derive_aead_key(shared_secret, "SDQC-controller-context")
+                aead_key = derive_aead_key(shared_secret, AEAD_CONTEXT_LABEL)
                 
                 # Criptografar payload com ChaCha20-Poly1305
                 aead_result = encrypt_payload_aead(payload_dict, aead_key)
