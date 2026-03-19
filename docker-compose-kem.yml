@@ -1,0 +1,10 @@
+services:
+  test_kem:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: test_kem
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: ["tail", "-f", "/dev/null"]

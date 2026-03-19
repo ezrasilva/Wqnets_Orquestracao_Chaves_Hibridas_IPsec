@@ -73,6 +73,8 @@ services:
       - TZ=America/Sao_Paulo  # Correção de Timestamp
       - ROTATION_INTERVAL=${ROTATION_INTERVAL:-10}
       - PQC_ALGO=${PQC_ALGO:-ML-KEM-768}
+      - SAE_ALICE=${SAE_ALICE:-sae-1}
+      - SAE_BOB=${SAE_BOB:-sae-2}
     networks:
       vpc_qkd:
         ipv4_address: 10.5.0.99

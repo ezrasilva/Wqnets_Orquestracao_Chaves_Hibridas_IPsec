@@ -35,6 +35,18 @@ class TradeOffController:
         self.orchestrator_name = "orchestrator"
         self.all_containers = self.real_containers + [self.orchestrator_name]
 
+    def get_running_containers(self, include_orchestrator=False):
+        expected = list(self.real_containers)
+        if include_orchestrator:
+            expected.append(self.orchestrator_name)
+
+        res = self.run_cmd("docker ps --format '{{.Names}}'")
+        if not res or not res.stdout:
+            return []
+
+        running = {name.strip() for name in res.stdout.splitlines() if name.strip()}
+        return [name for name in expected if name in running]
+
     def run_cmd(self, cmd, env=None, detached=False):
         try:
             if detached:
@@ -67,9 +79,13 @@ class TradeOffController:
         
         # Aplica perfil de rede WAN se necessário
         if self.profile != "perfect":
-            containers_str = " ".join(self.real_containers)
-            cmd = f"python3 {SCRIPTS_DIR}/simulate_network_conditions.py --profile {self.profile} --containers {containers_str}"
-            self.run_cmd(cmd)
+            running_nodes = self.get_running_containers(include_orchestrator=False)
+            if running_nodes:
+                containers_str = " ".join(running_nodes)
+                cmd = f"python3 {SCRIPTS_DIR}/simulate_network_conditions.py --profile {self.profile} --containers {containers_str}"
+                self.run_cmd(cmd)
+            else:
+                logger.warning("Nenhum container VPN em execução para aplicar perfil de rede.")
 
     def monitor_resources_thread(self, interval_folder):
         res_file = os.path.join(interval_folder, RESOURCE_FILE)
@@ -79,7 +95,12 @@ class TradeOffController:
         while self.running:
             try:
                 ts = time.time()
-                cmd = "docker stats " + " ".join(self.all_containers) + " --no-stream --format '{{.Name}},{{.CPUPerc}},{{.MemUsage}}'"
+                running_containers = self.get_running_containers(include_orchestrator=True)
+                if not running_containers:
+                    time.sleep(1)
+                    continue
+
+                cmd = "docker stats " + " ".join(running_containers) + " --no-stream --format '{{.Name}},{{.CPUPerc}},{{.MemUsage}}'"
                 res = self.run_cmd(cmd)
                 if res and res.stdout:
                     with open(res_file, 'a') as f:

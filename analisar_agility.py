@@ -407,7 +407,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--base-dir",
-        default="teste_agilidade",
+        default="teste_agility",
         help="Diretório base com pastas de algoritmos (default: teste_agilidade)",
     )
     parser.add_argument(

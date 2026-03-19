@@ -3,8 +3,10 @@
 Percorre cenários em teste_tradeoff/interval_* e extrai variáveis para análise:
 
 1) Throughput médio
-2) Janela de exposição
-3) Volume de exposição por chave (V_e = T_bar * T_r)
+2) Janela de exposição efetiva
+   W_e(T_r) = T_r + L_rekey_medio(T_r)
+3) Volume de exposição por chave
+   V_e = T_bar * W_e
 4) Consumo de entropia QKD
 5) Sustentabilidade
 6) Intervalo mínimo teórico de rotação
@@ -116,25 +118,39 @@ def analisar_throughput_pasta(pasta_cenario: Path) -> dict[str, Any]:
     return r
 
 
-def calcular_janela_exposicao(T_r: float) -> float:
-    return T_r
-
-
-def calcular_volume_exposicao_bits(throughput_mbps: float, T_r: float) -> float:
+def calcular_janela_exposicao(T_r: float, latencia_rekey_ms: float | None = None) -> float:
     """
-    V_e = T_bar * T_r
+    Janela efetiva de exposição por chave.
+
+    Se houver latência média de rekey medida no cenário:
+        W_e = T_r + L_rekey_medio
+    com L_rekey_medio convertido de ms para s.
+
+    Se não houver latência disponível:
+        W_e = T_r
+    """
+    if latencia_rekey_ms is None:
+        return T_r
+    return T_r + (latencia_rekey_ms / 1000.0)
+
+
+def calcular_volume_exposicao_bits(throughput_mbps: float, janela_exposicao_s: float) -> float:
+    """
+    V_e = T_bar * W_e
     throughput_mbps em megabits/s
     resultado em bits
     """
     throughput_bps = throughput_mbps * 1_000_000
-    return throughput_bps * T_r
+    return throughput_bps * janela_exposicao_s
 
 
-def calcular_volume_exposicao_megabits(throughput_mbps: float, T_r: float) -> float:
+def calcular_volume_exposicao_megabits(throughput_mbps: float, janela_exposicao_s: float) -> float:
     """
-    Resultado em megabits
+    V_e = T_bar * W_e
+    throughput_mbps em megabits/s
+    resultado em megabits
     """
-    return throughput_mbps * T_r
+    return throughput_mbps * janela_exposicao_s
 
 
 def calcular_consumo_qkd(k_bits: float, T_r: float) -> float:
@@ -160,17 +176,14 @@ def calcular_tr_minimo(k_bits: float, R_qkd: float) -> float:
 def _parse_timestamp_flex(value: str) -> datetime:
     value = str(value).strip()
 
-    # Trata ISO com Z
     if value.endswith("Z"):
         value = value[:-1]
 
-    # Tenta ISO
     try:
         return datetime.fromisoformat(value)
     except ValueError:
         pass
 
-    # Tenta formatos conhecidos
     for fmt in (
         "%Y-%m-%d %H:%M:%S.%f",
         "%Y-%m-%d %H:%M:%S",
@@ -182,7 +195,6 @@ def _parse_timestamp_flex(value: str) -> datetime:
         except ValueError:
             pass
 
-    # Fallback: epoch
     return datetime.fromtimestamp(float(value))
 
 
@@ -347,7 +359,6 @@ def analisar_cenario(pasta_cenario: Path, k_bits: float = 256, R_qkd: float = 10
     resultado: dict[str, Any] = {
         "cenario": pasta_cenario.name,
         "T_r_s": T_r,
-        "janela_exposicao_s": calcular_janela_exposicao(T_r),
         "consumo_qkd_bits_s": calcular_consumo_qkd(k_bits, T_r),
         "tr_min_teorico_s": calcular_tr_minimo(k_bits, R_qkd),
         "sustentabilidade": verificar_sustentabilidade(k_bits, T_r, R_qkd),
@@ -356,14 +367,23 @@ def analisar_cenario(pasta_cenario: Path, k_bits: float = 256, R_qkd: float = 10
     throughput = analisar_throughput_pasta(pasta_cenario)
     resultado["throughput"] = throughput
 
-    throughput_mbps = throughput["media_mbps"]
-    if throughput_mbps is not None:
-        resultado["volume_exposicao_bits"] = calcular_volume_exposicao_bits(throughput_mbps, T_r)
-        resultado["volume_exposicao_megabits"] = calcular_volume_exposicao_megabits(throughput_mbps, T_r)
-
     lat = resumo_latencia_rekey(pasta_cenario)
     if lat is not None:
         resultado["latencia_rekey"] = lat
+        janela_exposicao_s = calcular_janela_exposicao(T_r, lat.get("media_ms"))
+    else:
+        janela_exposicao_s = calcular_janela_exposicao(T_r)
+
+    resultado["janela_exposicao_s"] = janela_exposicao_s
+
+    throughput_mbps = throughput["media_mbps"]
+    if throughput_mbps is not None:
+        resultado["volume_exposicao_bits"] = calcular_volume_exposicao_bits(
+            throughput_mbps, janela_exposicao_s
+        )
+        resultado["volume_exposicao_megabits"] = calcular_volume_exposicao_megabits(
+            throughput_mbps, janela_exposicao_s
+        )
 
     resources = _achar_arquivo_recursos(pasta_cenario)
     if resources is not None:

@@ -29,8 +29,6 @@ from qukaydee_client import QuKayDeeClient
 ROTATION_INTERVAL = int(os.environ.get("ROTATION_INTERVAL", 10))
 AGENT_ALICE_URL = "https://192.168.100.10:5000"
 AGENT_BOB_URL   = "https://192.168.100.11:5000"
-AGENT_CAROL_URL = "https://192.168.100.12:5000"
-AGENT_DAVE_URL  = "https://192.168.100.13:5000"
 
 AUTH_ALGO = "ML-DSA-65"
 PRIV_KEY_PATH = "/scripts/orchestrator_auth.key"
@@ -43,11 +41,13 @@ AEAD_CONTEXT_LABEL = "SDQC-aead-envelope-v1"
 
 MAX_MESSAGE_AGE_SECONDS = 30
 
-ACCOUNT_ID = "2992"
+ACCOUNT_ID = "3031"
 URL_KME_ALICE = f"https://kme-1.acct-{ACCOUNT_ID}.etsi-qkd-api.qukaydee.com"
 URL_KME_BOB   = f"https://kme-2.acct-{ACCOUNT_ID}.etsi-qkd-api.qukaydee.com"
-URL_KME_CAROL = f"https://kme-3.acct-{ACCOUNT_ID}.etsi-qkd-api.qukaydee.com"
-URL_KME_DAVE  = f"https://kme-4.acct-{ACCOUNT_ID}.etsi-qkd-api.qukaydee.com"
+
+# SAE selection is dynamic to support QKD-rate sensitivity experiments.
+SAE_ALICE = os.environ.get("SAE_ALICE", "sae-1")
+SAE_BOB = os.environ.get("SAE_BOB", "sae-2")
 
 CERT_DIR = "/scripts/certs"
 CA_CERT  = f"{CERT_DIR}/account-{ACCOUNT_ID}-server-ca-qukaydee-com.crt"
@@ -71,13 +71,6 @@ CONNECTIONS = {
         'child_name': 'net-traffic',
         'initiator': 'alice'
     },
-    # 'carol-dave': {
-    #     'nodes': ('carol', 'dave'),
-    #     'urls': (AGENT_CAROL_URL, AGENT_DAVE_URL),
-    #     'ike_name': 'carol-to-dave',
-    #     'child_name': 'net-traffic',
-    #     'initiator': 'carol'
-    # }
 }
 
 # --- CONFIGURAÇÕES DE MÉTRICAS ---
@@ -375,6 +368,20 @@ def process_connection_keys(cycle, conn_name, conn_info, kme_urls, certs, node_t
         logger.error(f"[{conn_name}] Erro ao gerar chave: {e}")
         return conn_name, None
 
+
+def _build_cert_pair(sae_id):
+    """Return cert/key tuple for a SAE id and log if files are missing."""
+    cert_path = f"{CERT_DIR}/{sae_id}.crt"
+    key_path = f"{CERT_DIR}/{sae_id}.key"
+    if not os.path.exists(cert_path) or not os.path.exists(key_path):
+        logger.warning(
+            "Arquivos de certificado ausentes para %s (%s, %s)",
+            sae_id,
+            cert_path,
+            key_path,
+        )
+    return cert_path, key_path
+
 def main():
     logger.info(f"SDN Seguro Multi-Nós Iniciado (Autenticado via {AUTH_ALGO})")
     init_metrics()
@@ -382,18 +389,25 @@ def main():
     logger.info(f"Gerenciando {len(CONNECTIONS)} conexões: {list(CONNECTIONS.keys())}")
     
     kme_urls = {
-        'alice': URL_KME_ALICE, 'bob': URL_KME_BOB,
-        'carol': URL_KME_CAROL, 'dave': URL_KME_DAVE
+        'alice': URL_KME_ALICE,
+        'bob': URL_KME_BOB,
     }
     
     certs = {
-        'alice': (f"{CERT_DIR}/sae-1.crt", f"{CERT_DIR}/sae-1.key"),
-        'bob': (f"{CERT_DIR}/sae-2.crt", f"{CERT_DIR}/sae-2.key"),
-        'carol': (f"{CERT_DIR}/sae-3.crt", f"{CERT_DIR}/sae-3.key"),
-        'dave': (f"{CERT_DIR}/sae-4.crt", f"{CERT_DIR}/sae-4.key")
+        'alice': _build_cert_pair(SAE_ALICE),
+        'bob': _build_cert_pair(SAE_BOB),
     }
     
-    node_to_sae = {'alice': 'sae-1', 'bob': 'sae-2', 'carol': 'sae-3', 'dave': 'sae-4'}
+    node_to_sae = {
+        'alice': SAE_ALICE,
+        'bob': SAE_BOB,
+    }
+
+    logger.info(
+        "SAEs ativas: alice=%s, bob=%s",
+        SAE_ALICE,
+        SAE_BOB,
+    )
     
     cycle = 0
     while True:
