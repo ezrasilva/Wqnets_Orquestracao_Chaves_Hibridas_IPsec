@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: "Wqnets - Orquestração de chaves hibridas para tuneis IPsec"
+message: "If you use this repository, please cite it using the metadata below."
+type: software
+authors:
+  - family-names: "Silva"
+    given-names: "Esdras"
+repository-code: "https://github.com/SEU_USUARIO/Wqnets_Orquestracao_Chaves_Hibridas_IPsec"
+abstract: "Experimental framework to evaluate hybrid QKD+PQC key management over VPN tunnels, including automation, analysis, and plotting pipelines."
+license: "MIT"
+language: "pt-BR"
+keywords:
+  - QKD
+  - PQC
+  - key management
+  - reproducibility
+  - network experiments
+version: "1.0.0"
+date-released: "2026-04-16"
